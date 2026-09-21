@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>luego</title>
+    <meta name="description" content="luego. Nos vemos luego. hola@luego.works. Desde Madrid, 2026.">
+    <meta name="theme-color" content="#F3EEE2">
+    <meta property="og:title" content="luego">
+    <meta property="og:description" content="Nos vemos luego. hola@luego.works">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 480 480'%3E%3Crect width='480' height='480' rx='96' fill='%23F3EEE2'/%3E%3Cpath d='M305 385 A155 155 0 1 1 388 290 C372 320 320 345 262 332 C215 322 196 270 196 215 C196 160 215 140 240 140 C268 140 278 172 278 215 C278 265 255 305 218 325 C200 335 185 340 172 335' fill='none' stroke='%23051230' stroke-width='34' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400..700&display=swap">
+    <style>
+        /* Fondo plano: el color lo ponen la paleta de turno y el isotipo. Estos son
+           los valores por defecto ("Papel"); el script de la cabecera los sustituye
+           por una de las doce paletas en cada visita. */
+        :root {
+            --ground: #F3EEE2;
+            --ink: #051230;
+            --pad: clamp(1.25rem, 2.2vw, 2rem);
+            --w: clamp(40px, 4.2vw, 64px);
+            color-scheme: light;
+        }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; height: 100%; }
+        html { background: var(--ground); }
+        body {
+            color: var(--ink);
+            font-family: 'Instrument Sans', 'Helvetica Neue', Arial, sans-serif;
+            font-weight: 500;
+            font-size: clamp(1.05rem, 1.35vw, 1.3rem);
+            line-height: 1.25;
+            letter-spacing: -0.01em;
+            -webkit-font-smoothing: antialiased;
+        }
+        ::selection { background: var(--ink); color: var(--ground); }
+
+
+        /* Cuatro cosas pequeñas, una en cada esquina. El centro se queda vacío. */
+        main {
+            position: relative;
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding: var(--pad);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .row { display: flex; justify-content: space-between; align-items: flex-start; gap: 1.5rem; }
+        .row.bottom { align-items: flex-end; flex-wrap: wrap; gap: 0.5rem 1.5rem; }
+
+        h1 {
+            margin: 0;
+            font-weight: 500;
+            font-size: clamp(1.45rem, 2.2vw, 2.1rem);
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+        }
+        h1 b { font-weight: 700; }   /* "luego" es la marca */
+        p { margin: 0; }
+        /* El isotipo flota y se puede coger: lo mueve el script del final.
+           Sin JavaScript se queda quieto en su esquina. */
+        /* Fuera del flujo, anclado a su esquina: así, crezca lo que crezca, nunca
+           empuja ni parte los textos. */
+        .float {
+            position: absolute;
+            top: var(--pad);
+            right: var(--pad);
+            z-index: 2;
+            width: var(--w);
+            cursor: grab;
+            touch-action: none;
+            -webkit-user-select: none;
+            user-select: none;
+            will-change: transform;
+        }
+        .float.held { cursor: grabbing; }
+        /* El isotipo es siempre la misma trama (la dibuja el script en el canvas);
+           el SVG solo se ve si no hay JavaScript. Al despertar no cambia de imagen:
+           se amplía, con el píxel nítido. */
+        .dither { display: none; width: 100%; height: 100%; image-rendering: pixelated; pointer-events: none; }
+        .float.ready .dither { display: block; }
+        .float.ready .mark { display: none; }
+        .mark { display: block; width: 100%; height: auto; pointer-events: none; }
+        .where { text-align: right; margin-left: auto; }
+
+        a { color: inherit; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+        a:hover { text-decoration-thickness: 2px; }
+        a:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
+    </style>
+    <script>
+    // Cada visita estrena paleta. Doce combinaciones de fondo,
+    // texto y serie de colores para el isotipo (Sanzo Wada), todas con el texto en
+    // AA o más. Nunca repite la de la visita anterior. Va en la cabecera para que
+    // se aplique antes de pintar y no haya parpadeo. Sin JavaScript se ve "Papel".
+    (function () {
+        var P = [
+            ['Papel', '#F3EEE2', '#051230', ['#CC1236', '#F99D1B', '#EB5324', '#0093A5', '#00978D', '#1C4286', '#437742', '#1E0E3F']],
+            ['Perla', '#E6E8EB', '#12354E', ['#CC1236', '#F99D1B', '#EB5324', '#0093A5', '#00978D', '#1C4286', '#437742', '#1E0E3F']],
+            ['Cielo', '#BCE4E5', '#12354E', ['#CC1236', '#EB5324', '#F37F94', '#DD4027', '#B73F74', '#00B49B', '#005B8D', '#051230']],
+            ['Melocotón', '#FDD4BD', '#7D133A', ['#0093A5', '#00978D', '#1C4286', '#437742', '#5A82B3', '#B73F74', '#CC1236', '#F68C50']],
+            ['Hermosa', '#F9C1CE', '#7D133A', ['#0093A5', '#00978D', '#1C4286', '#437742', '#5A82B3', '#B73F74', '#CC1236', '#F37420']],
+            ['Limón', '#FFEFAE', '#12354E', ['#0093A5', '#00978D', '#1C4286', '#437742', '#5A82B3', '#B73F74', '#CC1236', '#F99D1B']],
+            ['Wada 151', '#064F6E', '#F5ECC2', ['#FFEFAE', '#F37F94', '#F99D1B', '#B5DECC', '#FDD4BD', '#C7D14F', '#F48067', '#00B49B']],
+            ['Wada 278', '#004F46', '#FDBF68', ['#FFEFAE', '#F37F94', '#F99D1B', '#B5DECC', '#FDD4BD', '#C7D14F', '#F48067', '#00B49B']],
+            ['Wada 61', '#501345', '#C7D14F', ['#FFEFAE', '#F37F94', '#F99D1B', '#B5DECC', '#FDD4BD', '#C7D14F', '#F48067', '#00B49B']],
+            ['Wada 147', '#82241F', '#B5DECC', ['#FFEFAE', '#F37F94', '#F99D1B', '#B5DECC', '#FDD4BD', '#C7D14F', '#F48067', '#00B49B']],
+            ['Piscina', '#78CDD0', '#051230', ['#CC1236', '#EB5324', '#DD4027', '#B73F74', '#00939B', '#005B8D', '#009465', '#051230']],
+            ['Mandarina', '#F99D1B', '#051230', ['#0093A5', '#1C4286', '#437742', '#5A82B3', '#B73F74', '#CC1236', '#FFF200', '#009465']]
+        ];
+        var last = -1, i;
+        try { last = parseInt(window.localStorage.getItem('luego-paleta'), 10); } catch (e) {}
+        do { i = Math.floor(Math.random() * P.length); } while (i === last);
+        try { window.localStorage.setItem('luego-paleta', i); } catch (e) {}
+        var p = P[i], root = document.documentElement;
+        root.style.setProperty('--ground', p[1]);
+        root.style.setProperty('--ink', p[2]);
+        var meta = document.querySelector('meta[name="theme-color"]'); if (meta) meta.setAttribute('content', p[1]);
+        var icon = document.querySelector('link[rel="icon"]');
+        if (icon) icon.setAttribute('href', icon.getAttribute('href').replace(/fill='%23[0-9A-Fa-f]{6}'/, "fill='%23" + p[1].slice(1) + "'").replace(/stroke='%23[0-9A-Fa-f]{6}'/, "stroke='%23" + p[2].slice(1) + "'"));
+        window.luegoPaleta = { nombre: p[0], colores: p[3] };
+    })();
+    </script>
+</head>
+<body>
+    <main>
+        <div class="row">
+            <h1>Nos vemos <b>luego</b></h1>
+            <div class="float" role="img" aria-label="Isotipo de luego"><svg class="mark" viewBox="55 55 370 370" aria-hidden="true"><path d="M305 385 A155 155 0 1 1 388 290 C372 320 320 345 262 332 C215 322 196 270 196 215 C196 160 215 140 240 140 C268 140 278 172 278 215 C278 265 255 305 218 325 C200 335 185 340 172 335" fill="none" stroke="currentColor" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/></svg><canvas class="dither" aria-hidden="true"></canvas></div>
+        </div>
+        <div class="row bottom">
+            <p><a href="mailto:hola@luego.works">hola@luego.works</a></p>
+            <p class="where">Desde Madrid, 2026</p>
+        </div>
+    </main>
+    <script>
+    // El isotipo es un juguete.
+    // - Es siempre la misma trama de 1 bit (Bayer 4x4), dibujada aquí a un píxel por
+    //   punto y teñida con el color de turno. Despertar no la cambia: la amplía.
+    // - A los 5 segundos se deja caer de su esquina, con gravedad. En el primer golpe
+    //   despierta: crece al doble, con suavidad, toma color y se pone a botar. Tocarlo o la barra espaciadora también
+    //   lo despiertan.
+    // - Mitad DVD, mitad pelota: cruza la pantalla en diagonal y toca los cuatro
+    //   bordes, pero con gravedad floja, así que las diagonales se curvan y cada
+    //   bote en el suelo le devuelve el impulso. En cada golpe se achata (boing).
+    // - Choca contra los bordes y contra los textos (nunca los tapa), y en cada
+    //   choque cambia de color, como el logo del DVD, con la serie de la paleta.
+    // - Se puede arrastrar y lanzar. La barra espaciadora le da un golpe.
+    // - Dos toques seguidos, o la tecla Escape, lo devuelven a su esquina, pequeño y
+    //   del color del texto, y ahí se queda quieto hasta que lo vuelvan a tocar
+    //   (WCAG 2.2.2: todo lo que se mueve solo tiene que poder pararse).
+    (function () {
+        var el = document.querySelector('.float');
+        if (!el) return;
+        var canvas = el.querySelector('.dither'), mask = document.createElement('canvas');
+        var still = window.matchMedia('(prefers-reduced-motion: reduce)');
+        var colors = (window.luegoPaleta && window.luegoPaleta.colores) || ['#cc1236', '#f99d1b', '#eb5324', '#0093a5', '#00978d', '#1c4286', '#437742', '#1e0e3f'], ci = -1;
+        var BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5], GROWN = 2;
+        var x = 0, y = 0, vx = 0, vy = 0, k = 1, kTo = 1, drift = 140, G = 180, DROP = 1200;
+        var sq = { a: 0, t: 0, nx: 0, ny: 1 }, normal = null;
+        var base = 0, home = { x: 0, y: 0 }, obstacles = [];
+        var moving = false, dragging = false, homing = false, falling = false;
+        var last = 0, grab = null, trail = [], timer = 0, lastTap = { t: -1e9, x: 0, y: 0 };
+
+        function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
+        function radius() { return base * k / 2; }
+        // Boing: tras un golpe se achata contra la superficie y vuelve con un par de rebotes.
+        function paint() {
+            var q = sq.a ? sq.a * Math.exp(-sq.t * 9) * Math.cos(sq.t * 30) : 0, flat = Math.abs(sq.ny) >= Math.abs(sq.nx);
+            var sx = k * (1 + (flat ? q : -q)), sy = k * (1 + (flat ? -q : q)), stick = radius() * Math.max(q, 0);
+            var px = x - (flat ? 0 : (sq.nx < 0 ? -1 : 1) * stick), py = y - (flat ? (sq.ny < 0 ? -1 : 1) * stick : 0);
+            el.style.transform = 'translate3d(' + px + 'px,' + py + 'px,0) scale(' + sx + ',' + sy + ')';
+        }
+
+        // Trama: el isotipo con una rampa de opacidad en diagonal (ralo arriba a la
+        // izquierda, macizo abajo a la derecha), pasado a 1 bit con una matriz Bayer.
+        function buildDither() {
+            var n = Math.max(24, Math.round(base));
+            mask.width = mask.height = canvas.width = canvas.height = n;
+            var c = mask.getContext('2d'), f = n / 370;
+            c.setTransform(f, 0, 0, f, -55 * f, -55 * f);
+            var g = c.createLinearGradient(70, 70, 410, 410);
+            g.addColorStop(0, 'rgba(0,0,0,.3)'); g.addColorStop(0.55, 'rgba(0,0,0,.66)'); g.addColorStop(1, 'rgba(0,0,0,1)');
+            c.strokeStyle = g; c.lineWidth = 32; c.lineCap = c.lineJoin = 'round';
+            c.stroke(new Path2D(el.querySelector('path').getAttribute('d')));
+            c.setTransform(1, 0, 0, 1, 0, 0);
+            var im = c.getImageData(0, 0, n, n), d = im.data;
+            for (var py = 0; py < n; py++) for (var px = 0; px < n; px++) {
+                var i = (py * n + px) * 4, on = d[i + 3] / 255 > (BAYER[(py & 3) * 4 + (px & 3)] + 0.5) / 16;
+                d[i] = d[i + 1] = d[i + 2] = 0; d[i + 3] = on ? 255 : 0;
+            }
+            c.putImageData(im, 0, 0);
+            el.classList.add('ready');
+            tint();
+        }
+        function tint() {
+            if (!canvas.width) return;
+            var c = canvas.getContext('2d');
+            c.globalCompositeOperation = 'source-over'; c.clearRect(0, 0, canvas.width, canvas.height); c.drawImage(mask, 0, 0);
+            c.globalCompositeOperation = 'source-in'; c.fillStyle = window.getComputedStyle(el).color; c.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        function recolor() { ci = (ci + 1) % colors.length; el.style.color = colors[ci]; tint(); }
+
+        function measure() {
+            var W = window.innerWidth, H = window.innerHeight, gap = 6;
+            el.style.transform = 'none'; el.style.width = '';
+            var r = el.getBoundingClientRect();
+            if (r.width !== Math.round(r.width)) { el.style.width = Math.round(r.width) + 'px'; r = el.getBoundingClientRect(); }   // píxeles enteros: la trama no se deforma
+            if (Math.round(r.width) !== Math.round(base)) { base = r.width; buildDither(); }
+            home = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+            // Cada texto es un obstáculo que llega hasta su esquina de pantalla: el hueco
+            // entre el texto y el borde es más estrecho que el isotipo, así no se cuela.
+            obstacles = Array.prototype.map.call(document.querySelectorAll('h1, .row p'), function (node) {
+                var q = node.getBoundingClientRect(), left = (q.left + q.right) / 2 < W / 2, top = (q.top + q.bottom) / 2 < H / 2;
+                return { l: left ? 0 : q.left - gap, r: left ? q.right + gap : W, t: top ? 0 : q.top - gap, b: top ? q.bottom + gap : H };
+            });
+            drift = clamp(W * 0.15, 90, 240);
+            contain(); paint();
+        }
+        // Dentro de la pantalla y fuera de los textos, con el radio que tenga ahora.
+        function contain() {
+            var rad = radius(), W = window.innerWidth, H = window.innerHeight;
+            x = clamp(x, rad - home.x, W - rad - home.x); y = clamp(y, rad - home.y, H - rad - home.y);
+            collide(false);
+        }
+        // Círculo contra rectángulos. Devuelve true si ha tocado algún texto.
+        function collide(bounce) {
+            var rad = radius(), hit = false;
+            for (var i = 0; i < obstacles.length; i++) {
+                var o = obstacles[i], cx = home.x + x, cy = home.y + y;
+                var qx = clamp(cx, o.l, o.r), qy = clamp(cy, o.t, o.b), dx = cx - qx, dy = cy - qy, d2 = dx * dx + dy * dy;
+                if (d2 >= rad * rad) continue;
+                var nx, ny, push;
+                if (d2 > 0.0001) { var d = Math.sqrt(d2); nx = dx / d; ny = dy / d; push = rad - d; }
+                else {
+                    var opts = [];                       // centro dentro del texto: salir por el lado que dé a pantalla
+                    if (o.l > 0) opts.push([cx - o.l, -1, 0]);
+                    if (o.r < window.innerWidth) opts.push([o.r - cx, 1, 0]);
+                    if (o.t > 0) opts.push([cy - o.t, 0, -1]);
+                    if (o.b < window.innerHeight) opts.push([o.b - cy, 0, 1]);
+                    opts.sort(function (a, b) { return a[0] - b[0]; });
+                    nx = opts[0][1]; ny = opts[0][2]; push = opts[0][0] + rad;
+                }
+                x += nx * push; y += ny * push;
+                if (bounce) { var dot = vx * nx + vy * ny; if (dot < 0) { vx -= 2 * dot * nx; vy -= 2 * dot * ny; } }
+                hit = true; normal = { nx: nx, ny: ny };
+            }
+            return hit;
+        }
+        function step(h) {
+            var hit = false, rad = radius(), W = window.innerWidth, H = window.innerHeight;
+            var minX = rad - home.x, maxX = W - rad - home.x, minY = rad - home.y, maxY = H - rad - home.y;
+            x += vx * h; y += vy * h;
+            if (x < minX) { x = minX; vx = Math.abs(vx); hit = true; normal = { nx: 1, ny: 0 }; } else if (x > maxX) { x = maxX; vx = -Math.abs(vx); hit = true; normal = { nx: -1, ny: 0 }; }
+            if (y < minY) { y = minY; vy = Math.abs(vy); hit = true; normal = { nx: 0, ny: 1 }; } else if (y > maxY) { y = maxY; vy = -Math.abs(vy); hit = true; normal = { nx: 0, ny: -1 }; }
+            if (collide(true)) hit = true;
+            return hit;
+        }
+
+        // Velocidad de salida de un bote: la justa para llegar al techo con algo de sobra,
+        // así toca los cuatro bordes como el DVD pero con la trayectoria curvada de una pelota.
+        function hop() { var room = Math.max(40, home.y + y - radius() * 2 - 8); return Math.sqrt(2 * G * room * (1.12 + Math.random() * 0.14)); }
+        function cruiseOff() { vx = (vx > 0 ? 1 : -1) * drift; }
+        function wake() { kTo = GROWN; if (still.matches) { k = kTo; contain(); paint(); } }
+        function launchLater() { window.clearTimeout(timer); timer = window.setTimeout(start, 5000); }
+        function start() {
+            if (moving || dragging || homing || still.matches) return;
+            if (kTo > 1) { cruiseOff(); if (ci < 0) recolor(); }
+            else { falling = true; vx = 0; vy = 0; }         // dormido: se deja caer
+            moving = true;
+        }
+        function goHome() {
+            dragging = false; moving = false; falling = false; vx = vy = 0; sq.a = 0; el.classList.remove('held');
+            ci = -1; el.style.color = ''; tint();            // color del texto
+            kTo = 1;                                           // y tamaño de reposo
+            if (still.matches) { x = y = 0; k = 1; paint(); return; }
+            homing = true;
+        }
+
+        function advance(dt) {
+            var dirty = false;
+            if (sq.a) { sq.t += dt; if (sq.t > 0.6) sq.a = 0; dirty = true; }
+            if (k !== kTo) {                                   // crecer o encoger, con suavidad
+                k += (kTo - k) * (1 - Math.exp(-dt * 9));
+                if (Math.abs(kTo - k) < 0.002) k = kTo;
+                if (!homing) contain();
+                dirty = true;
+            }
+            if (homing) {
+                var e = 1 - Math.exp(-dt * 11);                // deslizamiento rápido hacia la esquina
+                x -= x * e; y -= y * e;
+                if (Math.abs(x) < 0.5 && Math.abs(y) < 0.5 && k === kTo) { x = y = 0; homing = false; }     // y ahí se queda hasta que lo toquen: es la forma de pararlo
+                dirty = true;
+            } else if (moving && !dragging) {
+                if (!falling) {                                // de lado, ritmo constante (DVD): un lanzamiento se va calmando
+                    var ax = Math.abs(vx), c = drift + (ax - drift) * Math.exp(-dt * 1.4);
+                    vx = (vx < 0 ? -1 : 1) * c;
+                }
+                var g = falling ? DROP : G, s = Math.sqrt(vx * vx + vy * vy) + g * dt;
+                var n = Math.max(1, Math.ceil(s * dt / 6)), h = dt / n, hit = false, impact = 0;   // pasos cortos: no atraviesa textos
+                normal = null;
+                for (var i = 0; i < n; i++) {
+                    vy += g * h;                               // gravedad (floja: mitad pelota, mitad DVD)
+                    var before = Math.sqrt(vx * vx + vy * vy);
+                    if (step(h)) { hit = true; impact = Math.max(impact, before); if (falling) break; }
+                }
+                if (hit && falling) { falling = false; wake(); vx = -drift; }        // primer golpe: despierta
+                if (hit) {
+                    recolor();
+                    // Un bote en suelo (o sobre un texto) siempre devuelve la altura: no se cansa.
+                    if (normal.ny < -0.5) { var up = hop(); vy = -(up + (Math.max(-vy, 0) - up) * 0.5); }
+                    sq = { a: clamp(impact / 2600, 0.1, 0.32), t: 0, nx: normal.nx, ny: normal.ny };
+                }
+                dirty = true;
+            }
+            if (dirty) paint();
+        }
+        function frame(t) {
+            var dt = Math.min(0.05, (t - last) / 1000 || 0); last = t;
+            advance(dt);
+            window.requestAnimationFrame(frame);
+        }
+
+        el.addEventListener('pointerdown', function (e) {
+            var dbl = e.timeStamp - lastTap.t < 320 && Math.abs(e.clientX - lastTap.x) < 30 && Math.abs(e.clientY - lastTap.y) < 30;
+            lastTap = { t: dbl ? -1e9 : e.timeStamp, x: e.clientX, y: e.clientY };
+            if (dbl) { e.preventDefault(); goHome(); return; }            // dos toques seguidos: a casa
+            homing = false; falling = false; window.clearTimeout(timer);
+            dragging = true; el.classList.add('held');
+            try { el.setPointerCapture(e.pointerId); } catch (err) {}
+            if (ci < 0) recolor();
+            wake();                                                        // cogerlo lo despierta
+            grab = { px: e.clientX - x, py: e.clientY - y }; trail = [];
+            e.preventDefault();
+        });
+        window.addEventListener('pointermove', function (e) {
+            if (!dragging) return;
+            x = e.clientX - grab.px; y = e.clientY - grab.py;
+            contain();                                                     // ni fuera de pantalla ni encima de un texto
+            trail.push({ t: e.timeStamp, x: x, y: y }); if (trail.length > 6) trail.shift();
+            paint();
+        });
+        function release() {
+            if (!dragging) return;
+            dragging = false; el.classList.remove('held');
+            var a = trail[0], z = trail[trail.length - 1], dt = a && z ? (z.t - a.t) / 1000 : 0;
+            if (dt > 0.01) { vx = (z.x - a.x) / dt; vy = (z.y - a.y) / dt; }
+            var s = Math.sqrt(vx * vx + vy * vy);
+            if (s > 1600) { vx *= 1600 / s; vy *= 1600 / s; }
+            if (still.matches) { vx = vy = 0; moving = false; return; }   // sin movimiento: se queda donde lo sueltas
+            moving = true;                                                 // soltado sin impulso: cae y sigue botando
+        }
+        // Barra espaciadora: un golpe. Sale rebotado hacia otro lado, con impulso,
+        // y cambia de color como en cualquier otro choque.
+        window.addEventListener('keydown', function (e) {
+            if (e.code !== 'Space' && e.key !== ' ') return;
+            if (e.repeat || dragging || homing) return;
+            e.preventDefault();
+            falling = false; wake(); recolor();
+            if (still.matches) return;                                     // sin movimiento: solo despierta y cambia de color
+            window.clearTimeout(timer);
+            vx = (vx > 0 ? -1 : 1) * drift * (2.2 + Math.random());          // patada: hacia el otro lado y hacia arriba
+            vy = -Math.max(hop() * 0.8, 500);
+            sq = { a: 0.22, t: 0, nx: vx > 0 ? 1 : -1, ny: 0 };
+            moving = true;
+        });
+        window.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !homing) { window.clearTimeout(timer); goHome(); } });
+        window.addEventListener('pointerup', release);
+        window.addEventListener('pointercancel', release);
+        window.addEventListener('resize', measure);
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);   // la fuente web cambia el ancho de los textos
+        measure();
+        launchLater();
+        window.requestAnimationFrame(frame);
+    })();
+    </script>
+</body>
+</html>
