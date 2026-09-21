@@ -8,6 +8,12 @@
     <meta name="theme-color" content="#F3EEE2">
     <meta property="og:title" content="luego">
     <meta property="og:description" content="Nos vemos luego. hola@luego.works">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://luego-works.github.io/og.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Nos vemos luego. El isotipo de luego, tramado, sobre azul.">
+    <meta name="twitter:card" content="summary_large_image">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 480 480'%3E%3Crect width='480' height='480' rx='96' fill='%23F3EEE2'/%3E%3Cpath d='M305 385 A155 155 0 1 1 388 290 C372 320 320 345 262 332 C215 322 196 270 196 215 C196 160 215 140 240 140 C268 140 278 172 278 215 C278 265 255 305 218 325 C200 335 185 340 172 335' fill='none' stroke='%23051230' stroke-width='34' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,7 +21,7 @@
     <style>
         /* Fondo plano: el color lo ponen la paleta de turno y el isotipo. Estos son
            los valores por defecto ("Papel"); el script de la cabecera los sustituye
-           por una de las doce paletas en cada visita. */
+           por una de las ocho paletas en cada visita. */
         :root {
             --ground: #F3EEE2;
             --ink: #051230;
@@ -30,7 +36,7 @@
             color: var(--ink);
             font-family: 'Instrument Sans', 'Helvetica Neue', Arial, sans-serif;
             font-weight: 500;
-            font-size: clamp(1.05rem, 1.35vw, 1.3rem);
+            font-size: clamp(1rem, 1.1vw, 1.1rem);   /* lo pequeño, pequeño */
             line-height: 1.25;
             letter-spacing: -0.01em;
             -webkit-font-smoothing: antialiased;
@@ -54,9 +60,9 @@
         h1 {
             margin: 0;
             font-weight: 500;
-            font-size: clamp(1.45rem, 2.2vw, 2.1rem);
-            line-height: 1.1;
-            letter-spacing: -0.02em;
+            font-size: clamp(2rem, 3.6vw, 3.4rem);        /* y la frase, tres veces más */
+            line-height: 1;
+            letter-spacing: -0.03em;
         }
         h1 b { font-weight: 700; }   /* "luego" es la marca */
         p { margin: 0; }
@@ -91,24 +97,20 @@
         a:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
     </style>
     <script>
-    // Cada visita estrena paleta. Doce combinaciones de fondo,
+    // Cada visita estrena paleta. Ocho combinaciones de fondo,
     // texto y serie de colores para el isotipo (Sanzo Wada), todas con el texto en
     // AA o más. Nunca repite la de la visita anterior. Va en la cabecera para que
     // se aplique antes de pintar y no haya parpadeo. Sin JavaScript se ve "Papel".
     (function () {
         var P = [
             ['Papel', '#F3EEE2', '#051230', ['#CC1236', '#F99D1B', '#EB5324', '#0093A5', '#00978D', '#1C4286', '#437742', '#1E0E3F']],
-            ['Perla', '#E6E8EB', '#12354E', ['#CC1236', '#F99D1B', '#EB5324', '#0093A5', '#00978D', '#1C4286', '#437742', '#1E0E3F']],
             ['Cielo', '#BCE4E5', '#12354E', ['#CC1236', '#EB5324', '#F37F94', '#DD4027', '#B73F74', '#00B49B', '#005B8D', '#051230']],
             ['Melocotón', '#FDD4BD', '#7D133A', ['#0093A5', '#00978D', '#1C4286', '#437742', '#5A82B3', '#B73F74', '#CC1236', '#F68C50']],
-            ['Hermosa', '#F9C1CE', '#7D133A', ['#0093A5', '#00978D', '#1C4286', '#437742', '#5A82B3', '#B73F74', '#CC1236', '#F37420']],
             ['Limón', '#FFEFAE', '#12354E', ['#0093A5', '#00978D', '#1C4286', '#437742', '#5A82B3', '#B73F74', '#CC1236', '#F99D1B']],
-            ['Wada 151', '#064F6E', '#F5ECC2', ['#FFEFAE', '#F37F94', '#F99D1B', '#B5DECC', '#FDD4BD', '#C7D14F', '#F48067', '#00B49B']],
-            ['Wada 278', '#004F46', '#FDBF68', ['#FFEFAE', '#F37F94', '#F99D1B', '#B5DECC', '#FDD4BD', '#C7D14F', '#F48067', '#00B49B']],
-            ['Wada 61', '#501345', '#C7D14F', ['#FFEFAE', '#F37F94', '#F99D1B', '#B5DECC', '#FDD4BD', '#C7D14F', '#F48067', '#00B49B']],
-            ['Wada 147', '#82241F', '#B5DECC', ['#FFEFAE', '#F37F94', '#F99D1B', '#B5DECC', '#FDD4BD', '#C7D14F', '#F48067', '#00B49B']],
             ['Piscina', '#78CDD0', '#051230', ['#CC1236', '#EB5324', '#DD4027', '#B73F74', '#00939B', '#005B8D', '#009465', '#051230']],
-            ['Mandarina', '#F99D1B', '#051230', ['#0093A5', '#1C4286', '#437742', '#5A82B3', '#B73F74', '#CC1236', '#FFF200', '#009465']]
+            ['Mandarina', '#F99D1B', '#051230', ['#0093A5', '#1C4286', '#437742', '#5A82B3', '#B73F74', '#CC1236', '#7D133A', '#009465']],
+            ['Wada 151', '#064F6E', '#F5ECC2', ['#FFEFAE', '#F37F94', '#F99D1B', '#B5DECC', '#FDD4BD', '#C7D14F', '#F48067', '#00B49B']],
+            ['Wada 61', '#501345', '#C7D14F', ['#F37F94', '#B5DECC', '#F99D1B', '#FFEFAE', '#00B49B', '#FDD4BD', '#F48067', '#78CDD0']]
         ];
         var last = -1, i;
         try { last = parseInt(window.localStorage.getItem('luego-paleta'), 10); } catch (e) {}
